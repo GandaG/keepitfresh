@@ -1,0 +1,4 @@
+tox
+bumpversion
+coveralls
+wheel

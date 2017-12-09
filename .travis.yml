@@ -1,0 +1,19 @@
+language: python
+
+python:
+    - 2.7
+    - 3.4
+    - 3.5
+    - 3.5-dev
+    - &latest_py3 3.6
+    - 3.6-dev
+
+install:
+    - pip install -U pip
+    - pip install -r requirements-dev.txt
+
+script:
+    - tox -e check,py
+
+after_success:
+    - coveralls
