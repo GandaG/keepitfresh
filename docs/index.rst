@@ -19,6 +19,8 @@ Reference
 
 .. autofunction:: keepitfresh.get_update_version
 
+.. autofunction:: keepitfresh.dl_unpack
+
 .. toctree::
     :hidden:
 

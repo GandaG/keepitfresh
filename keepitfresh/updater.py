@@ -18,9 +18,14 @@
 The main bulk of the library.
 """
 
+import os
+
 from re import findall
 from urllib.request import urlopen
 from urllib.parse import urljoin
+from tempfile import TemporaryDirectory
+from shutil import copyfileobj
+from patoolib import extract_archive
 from packaging.version import parse
 
 
@@ -94,3 +99,24 @@ def get_update_version(file_dict, current_version, vcmp=None):
     if freshest_match == (None, current_version):
         return ()
     return freshest_match
+
+
+def dl_unpack(url, outdir, unpack=None):
+    """
+    Downloads the archive in **url** and unpacks it to **outdir**.
+
+    Unpacking is handled by `patool <http://wummel.github.io/patool/>`_.
+    If you need to override this, you can a function in **unpack** that
+    accepts the archive path as the first argument and the output folder
+    as the second argument.
+    """
+    fname = url.rsplit('/', 1)[1]
+    with TemporaryDirectory() as tmpdir:
+        file_path = os.path.join(tmpdir, fname)
+        with urlopen(url) as response, open(file_path, 'wb') as out_file:
+            copyfileobj(response, out_file)
+
+        if unpack is not None:
+            unpack(file_path, outdir)
+        else:
+            extract_archive(file_path, outdir=outdir, verbosity=-1)

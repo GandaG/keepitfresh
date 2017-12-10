@@ -1,6 +1,8 @@
 from keepitfresh import updater
+import os
 import mock
 import pytest
+import zipfile
 
 
 @mock.patch("keepitfresh.updater.urlopen")
@@ -64,3 +66,34 @@ def test_get_update_version():
     cur_ver = '0.1.3'
     expected = ()
     assert test_func(file_dict, cur_ver) == expected
+
+
+def test_dl_unpack(tmpdir):
+    test_func = updater.dl_unpack
+
+    tmpdir = str(tmpdir)
+    output = os.path.join(tmpdir, 'out')
+    zip_file = os.path.join(tmpdir, 'example.zip')
+    example_dir = os.path.join(tmpdir, 'example')
+    example_dir_file = os.path.join(example_dir, 'example.file')
+    example_file = os.path.join(tmpdir, 'example.file')
+
+    os.mkdir(output)
+    os.mkdir(example_dir)
+    open(example_dir_file, 'w').close()
+    open(example_file, 'w').close()
+
+    with zipfile.ZipFile(zip_file, 'w') as zipf:
+        zipf.write(example_file, os.path.basename(example_file))
+
+    test_func('file://' + zip_file, output)
+    assert os.listdir(output) == ['example.file']
+
+    os.remove(os.path.join(output, 'example.file'))
+
+    with zipfile.ZipFile(zip_file, 'w') as zipf:
+        zipf.write(example_dir_file, os.path.relpath(example_dir_file, output))
+
+    test_func('file://' + zip_file, output)
+    assert os.listdir(output) == ['example']
+    assert os.listdir(os.path.join(output, 'example')) == ['example.file']
