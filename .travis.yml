@@ -8,6 +8,27 @@ python:
     - &latest_py3 3.6
     - 3.6-dev
 
+jobs:
+    include:
+        - stage: Deploy
+          if: tag IS present
+          python: *latest_py3
+          install:
+              - pip install -U pip
+              - pip install -r requirements-dev.txt
+          script: skip
+          deploy:
+              provider: pypi
+              on:
+                  tags: true
+                  all_branches: true
+              user: ganda
+              password:
+                  secure: U+HiNw4q9NdFm9vkCoizf0gd9JtzNKhqAmz7nSTDqA0IKzACE+VgZar02JkLA7TyMXtZBZNnsQePGLpaZ+ozLw8d+a0h16maF848XrPyBhW8POVXm6HnMIbC7HODv6pMQ63U/zcPjV1+qUZAdOiFmb9a74Jy20QgaxZgH0LiKq4flYOOHPuhgTfFsPpeHDUfIf5YYpxTHa8s5+8SLNApi6vg4HR+cfhwpgisiWEIEtSWXtSZ6miIxVFaOqeHKqSHRmvGdPT2d3nDm9+aHCCt0uQYdsQoayZNuiZP+EXVCFxax3qDGPXbpBNkWanfRiSgEEIWIPqOnBOFIAW+dOMwJR5s0SuGx5B4RLICKxQQi5Bm7PWRmUNi/ahbV8vmtq8qnjLNN13xAMaFl+2yNf03wcN9Q3fPrviMlOwWLtquPY/SZR2Qg4fYv9l2afYU/C0UZ5e9PYiZcBs74xRWbRezlnkY/KENvvmmmToj37paigBZ351tTvxE2JiZzvzC1KVkUwzwrxwG+a4pWou4DM/TxKbC9cYnBg07yLdvw6IT2mWr4zso5TmvsyBc2/6s07SPtGtYzj5gd/GTGqdq86+nC9iy1GHO5h9NZ8QMzSsmpKwjb9L+d9Icl7etXEtxX4AkOoAEK86IJFxy/FFNw8dSZ2w+iZuyi6hDnrLhnhQHK0c=
+              distributions: "sdist bdist_wheel"
+              skip_cleanup: true
+              skip_upload_docs: true
+
 install:
     - pip install -U pip
     - pip install -r requirements-dev.txt
