@@ -1,5 +1,6 @@
 from keepitfresh import updater
 import os
+import pathlib
 import mock
 import pytest
 import zipfile
@@ -86,7 +87,7 @@ def test_dl_unpack(tmpdir):
     with zipfile.ZipFile(zip_file, 'w') as zipf:
         zipf.write(example_file, os.path.basename(example_file))
 
-    test_func('file://' + zip_file, output)
+    test_func(pathlib.Path(zip_file).as_uri(), output)
     assert os.listdir(output) == ['example.file']
 
     os.remove(os.path.join(output, 'example.file'))
@@ -94,6 +95,6 @@ def test_dl_unpack(tmpdir):
     with zipfile.ZipFile(zip_file, 'w') as zipf:
         zipf.write(example_dir_file, os.path.relpath(example_dir_file, output))
 
-    test_func('file://' + zip_file, output)
+    test_func(pathlib.Path(zip_file).as_uri(), output)
     assert os.listdir(output) == ['example']
     assert os.listdir(os.path.join(output, 'example')) == ['example.file']
