@@ -21,6 +21,7 @@ The main bulk of the library.
 from re import findall
 from urllib.request import urlopen
 from urllib.parse import urljoin
+from packaging.version import parse
 
 
 def get_file_urls(base_url, regex):
@@ -58,3 +59,38 @@ def get_file_urls(base_url, regex):
         file_dict[urljoin(base_url, match[0])] = match[1]
 
     return file_dict
+
+
+def get_update_version(file_dict, current_version, vcmp=None):
+    """
+    Look through a dictionary that maps file urls to version strings, much like
+    the one returned by :func:`~keepitfresh.get_file_urls`, and get the latest
+    version and corresponding file url. If no version newer than
+    **current_version** is found, returns an empty tuple.
+
+    **current_version** should be a string in the same pattern as used in
+    :func:`~keepitfresh.get_file_urls`.
+
+    To get the latest version, a comparison function is used. The default uses
+    the comparison from the
+    `packaging <https://packaging.pypa.io/en/latest/version/>`_ package. To
+    override this, pass a function in **vcmp** that accepts two version strings
+    and returns ``True`` whenever the second version string is newer than the
+    first version string.
+    """
+    freshest_match = (None, current_version)
+
+    for url, version in file_dict.items():
+        fresher = False
+
+        if vcmp is not None:
+            fresher = vcmp(freshest_match[1], version)
+        else:
+            fresher = parse(freshest_match[1]) < parse(version)
+
+        if fresher:
+            freshest_match = (url, version)
+
+    if freshest_match == (None, current_version):
+        return ()
+    return freshest_match

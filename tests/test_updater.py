@@ -41,3 +41,26 @@ def test_get_file_urls(mock_open):
 
     with pytest.raises(ValueError):
         test_func(test_url, regex)
+
+
+def test_get_update_version():
+    test_func = updater.get_update_version
+
+    file_dict = {
+            'https://pypi.python.org/'
+            'packages/example-0.1.1.tar.gz': '0.1.1',
+            'https://pypi.python.org/'
+            'packages/example-0.1.0.zip': '0.1.0',
+            'https://pypi.python.org/'
+            'simple/packages/example-0.1.2.7z': '0.1.2',
+            'https://pypi.python.org/'
+            'simple/example/packages/example-0.1.3.rar': '0.1.3'}
+
+    cur_ver = '0.0.0'
+    expected = ('https://pypi.python.org/simple/'
+                'example/packages/example-0.1.3.rar', '0.1.3')
+    assert test_func(file_dict, cur_ver) == expected
+
+    cur_ver = '0.1.3'
+    expected = ()
+    assert test_func(file_dict, cur_ver) == expected

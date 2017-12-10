@@ -26,4 +26,4 @@ See below for a quick tutorial!
 Documentation
 -------------
 
-For more information check out *keepitfresh*'s documentation at `keepitfresh.rtfd.io <https://keepitfresh.rtfd.io>`_
+For more information check out *keepitfresh*'s documentation at `keepitfresh.rtfd.io <http://keepitfresh.rtfd.io>`_

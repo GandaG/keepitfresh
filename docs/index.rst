@@ -17,6 +17,7 @@ Reference
 
 .. autofunction:: keepitfresh.get_file_urls
 
+.. autofunction:: keepitfresh.get_update_version
 
 .. toctree::
     :hidden:

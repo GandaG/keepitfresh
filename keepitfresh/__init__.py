@@ -18,6 +18,6 @@
 The main entrypoint for the API.
 """
 
-from .updater import get_file_urls
+from .updater import get_file_urls, get_update_version
 
-__all__ = ['get_file_urls']
+__all__ = ['get_file_urls', 'get_update_version']
