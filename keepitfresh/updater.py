@@ -25,9 +25,25 @@ from urllib.parse import urljoin
 
 def get_file_urls(base_url, regex):
     """
+    Inspired by uscan, the debian packaging utility.
+
     Looks through all ``<a href="*">`` references to files in the given
     base url and extracts them into a dictionary of (file_url, file_version)
     value-pairs.
+
+    The **regex** argument is a regular expression that matches the file name.
+    It MUST have the file's version in a capturing group and this MUST be the
+    first group (``\\1`` backreference).
+
+    As an example, consider a project named *b* by *a* which deploys
+    to Github Releases with filenames such as *b-1.0.0.zip*. The function
+    call would look like::
+
+        >>> base_url = "https://github.com/a/b/releases"
+        >>> regex = r"b-(\\d+\\.\\d+\\.\\d+)\\.zip"
+        >>> result = get_file_urls(base_url, regex)
+        >>> result
+        {"https://github.com/a/b/releases/download/1.0.0/b-1.0.0.zip": "1.0.0"}
     """
     with urlopen(base_url) as web:
         content = web.read().decode(web.headers.get_content_charset())

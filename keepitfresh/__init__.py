@@ -17,3 +17,7 @@
 """
 The main entrypoint for the API.
 """
+
+from .updater import get_file_urls
+
+__all__ = ['get_file_urls']

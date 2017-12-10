@@ -12,4 +12,18 @@ keepitfresh
 .. image:: https://img.shields.io/coveralls/github/GandaG/keepitfresh/master.svg?style=flat-square&label=Coverage
     :target: https://coveralls.io/github/GandaG/keepitfresh?branch=master
 
-*A very modular auto-updater for frozen applications*
+*A simpler way to freshen up your frozen applications*
+
+*keepitfresh* serves as an auto-updater for frozen applications [#]_.
+Inspired by `uscan <https://manpages.debian.org/jessie/devscripts/uscan.1.en.html>`_,
+it's incredibly modular giving you full control over every step.
+
+See below for a quick tutorial!
+
+.. [#] While it was made with frozen application is mind it can be applied
+       to anything really.
+
+Documentation
+-------------
+
+For more information check out *keepitfresh*'s documentation at `keepitfresh.rtfd.io <https://keepitfresh.rtfd.io>`_
