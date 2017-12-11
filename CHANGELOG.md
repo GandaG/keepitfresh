@@ -1,8 +1,12 @@
 ## Changelog
 
+#### 0.4.0
+
+* Added `overwrite_restart` that handles overwriting and restarting (duh).
+
 #### 0.3.0
 
-* Add `dl_unpack` to download and unpack the archive into a target folder.
+* Added `dl_unpack` to download and unpack the archive into a target folder.
 
 #### 0.2.0
 
