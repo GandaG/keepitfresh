@@ -36,4 +36,4 @@ script:
     - tox -e check,py
 
 after_success:
-    - coveralls
+    - coveralls --rcfile=.coveragerc_unix
