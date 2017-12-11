@@ -4,14 +4,14 @@ import stat
 import zipfile
 from platform import system
 
+import keepitfresh
 import mock
 import pytest
-from keepitfresh import updater
 
 
-@mock.patch("keepitfresh.updater.urlopen")
+@mock.patch("keepitfresh.urlopen")
 def test_get_file_urls(mock_open):
-    test_func = updater.get_file_urls
+    test_func = keepitfresh.get_file_urls
 
     mock_webpage = mock_open.return_value.__enter__.return_value
     mock_webpage.read.return_value = \
@@ -50,7 +50,7 @@ def test_get_file_urls(mock_open):
 
 
 def test_get_update_version():
-    test_func = updater.get_update_version
+    test_func = keepitfresh.get_update_version
 
     file_dict = {
             'https://pypi.python.org/'
@@ -73,7 +73,7 @@ def test_get_update_version():
 
 
 def test_dl_unpack(tmpdir):
-    test_func = updater.dl_unpack
+    test_func = keepitfresh.dl_unpack
 
     tmpdir = str(tmpdir)
     output = os.path.join(tmpdir, 'out')
@@ -103,9 +103,9 @@ def test_dl_unpack(tmpdir):
     assert os.listdir(os.path.join(output, 'example')) == ['example.file']
 
 
-@mock.patch("keepitfresh.updater.os.execl")
+@mock.patch("keepitfresh.os.execl")
 def test_overwrite_restart(mock_exec, tmpdir):
-    test_func = updater.overwrite_restart
+    test_func = keepitfresh.overwrite_restart
 
     tmpdir = str(tmpdir)
     ow_file_dir = os.path.join(tmpdir, 'example')
@@ -121,9 +121,9 @@ def test_overwrite_restart(mock_exec, tmpdir):
     new_in_file = os.path.join(ow_file_dir, 'examplev2.file')
 
     if system() == 'Windows':
-        open_patcher = mock.patch('keepitfresh.updater.open')
-        subprocess_patcher = mock.patch('keepitfresh.updater.subprocess')
-        exit_patcher = mock.patch('keepitfresh.updater.os._exit')
+        open_patcher = mock.patch('keepitfresh.open')
+        subprocess_patcher = mock.patch('keepitfresh.subprocess')
+        exit_patcher = mock.patch('keepitfresh.os._exit')
         mock_open = open_patcher.start()
         subprocess_patcher.start()
         exit_patcher.start()
@@ -161,9 +161,9 @@ def test_overwrite_restart(mock_exec, tmpdir):
     new_in_file = os.path.join(ow_file_dir, 'example_new', 'examplev2.file')
 
     if system() == 'Windows':
-        open_patcher = mock.patch('keepitfresh.updater.open')
-        subprocess_patcher = mock.patch('keepitfresh.updater.subprocess')
-        exit_patcher = mock.patch('keepitfresh.updater.os._exit')
+        open_patcher = mock.patch('keepitfresh.open')
+        subprocess_patcher = mock.patch('keepitfresh.subprocess')
+        exit_patcher = mock.patch('keepitfresh.os._exit')
         mock_open = open_patcher.start()
         subprocess_patcher.start()
         exit_patcher.start()
