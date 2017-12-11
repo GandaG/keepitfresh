@@ -37,6 +37,7 @@ config = setuptools.config.read_configuration('../setup.cfg')
 # ones.
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.viewcode',
     'sphinx.ext.todo']
 
 intersphinx_mapping = {'python': ('https://docs.python.org/3.6', None)}

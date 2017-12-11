@@ -1,9 +1,12 @@
-from keepitfresh import updater
 import os
 import pathlib
+import stat
+import zipfile
+from platform import system
+
 import mock
 import pytest
-import zipfile
+from keepitfresh import updater
 
 
 @mock.patch("keepitfresh.updater.urlopen")
@@ -98,3 +101,55 @@ def test_dl_unpack(tmpdir):
     test_func(pathlib.Path(zip_file).as_uri(), output)
     assert os.listdir(output) == ['example']
     assert os.listdir(os.path.join(output, 'example')) == ['example.file']
+
+
+@mock.patch("keepitfresh.updater.os.execl")
+def test_overwrite_restart(mock_exec, tmpdir):
+    test_func = updater.overwrite_restart
+
+    tmpdir = str(tmpdir)
+    ow_file_dir = os.path.join(tmpdir, 'example')
+
+    in_file = os.path.join(tmpdir, 'examplev2.file')
+    ow_file = os.path.join(ow_file_dir, 'examplev1.file')
+
+    os.mkdir(ow_file_dir)
+
+    open(in_file, 'w').close()
+    open(ow_file, 'w').close()
+
+    test_func(in_file, ow_file, 'examplev2.file')
+    assert os.listdir(ow_file_dir) == ['examplev2.file']
+    if system() != 'Windows':
+        file_st = os.stat(os.path.join(ow_file_dir, 'examplev2.file'))
+        assert file_st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        mock_exec.assert_called_with(os.path.join(ow_file_dir,
+                                                  'examplev2.file'),
+                                     'examplev2.file')
+
+    os.remove(os.path.join(ow_file_dir, 'examplev2.file'))
+
+    in_dir = os.path.join(tmpdir, 'example_new')
+    ow_dir = os.path.join(ow_file_dir, 'example_old')
+    in_dir_file = os.path.join(in_dir, 'examplev2.file')
+    ow_dir_file = os.path.join(ow_dir, 'examplev1.file')
+
+    os.mkdir(in_dir)
+    os.mkdir(ow_dir)
+
+    open(in_dir_file, 'w').close()
+    open(ow_dir_file, 'w').close()
+
+    test_func(in_dir, ow_dir, os.path.join('example_new', 'examplev2.file'))
+    assert os.listdir(ow_file_dir) == ['example_new']
+    assert os.listdir(os.path.join(ow_file_dir,
+                                   'example_new')) == ['examplev2.file']
+    if system() != 'Windows':
+        file_st = os.stat(os.path.join(ow_file_dir,
+                                       'example_new',
+                                       'examplev2.file'))
+        assert file_st.st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        mock_exec.assert_called_with(os.path.join(ow_file_dir,
+                                                  'example_new',
+                                                  'examplev2.file'),
+                                     'examplev2.file')

@@ -21,7 +21,7 @@ it's incredibly modular giving you full control over every step.
 See below for a quick tutorial!
 
 .. [#] While it was made with frozen application is mind it can be applied
-       to anything really.
+       to anything executable really.
 
 Documentation
 -------------

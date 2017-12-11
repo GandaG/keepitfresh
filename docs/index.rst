@@ -21,6 +21,8 @@ Reference
 
 .. autofunction:: keepitfresh.dl_unpack
 
+.. autofunction:: keepitfresh.overwrite_restart
+
 .. toctree::
     :hidden:
 

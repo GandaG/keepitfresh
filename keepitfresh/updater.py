@@ -19,14 +19,17 @@ The main bulk of the library.
 """
 
 import os
-
+import stat
+import subprocess
+from platform import system
 from re import findall
-from urllib.request import urlopen
-from urllib.parse import urljoin
+from shutil import copy2, copyfileobj, copytree, rmtree
 from tempfile import TemporaryDirectory
-from shutil import copyfileobj
-from patoolib import extract_archive
+from urllib.parse import urljoin
+from urllib.request import urlopen
+
 from packaging.version import parse
+from patoolib import extract_archive
 
 
 def get_file_urls(base_url, regex):
@@ -120,3 +123,73 @@ def dl_unpack(url, outdir, unpack=None):
             unpack(file_path, outdir)
         else:
             extract_archive(file_path, outdir=outdir, verbosity=-1)
+
+
+def overwrite_restart(initem, owitem, entry_point):
+    """
+    Overwrites the current application file/folder and restarts the process
+    with the updated application.
+
+    Inspired by PyUpdater, uses a separate process for Unix and Windows
+    (Windows does not allow file deletion while it's still being used so we
+    have to work around that).
+
+    **initem** can be either a file or a folder and is the path to the updated
+    application. **owitem** can be either a file or a folder and is the path
+    to the old application.
+
+    **entry_point** is the relative path from the parent folder of **owitem**
+    to the executable to restart with.
+    """
+    initem = os.path.abspath(initem)
+    owitem = os.path.abspath(owitem)
+    owdir = os.path.dirname(owitem)
+    abs_path = os.path.join(owdir, entry_point)
+    fname = os.path.basename(abs_path)
+
+    if system() == 'Windows':  # pragma: no unix
+        vbs_string = ('CreateObject("Wscript.Shell").Run """" '
+                      '& WScript.Arguments(0) & """", 0, False')
+
+        bat_string = "@echo off\n"
+
+        if os.path.isdir(owitem):
+            bat_string += "rd /s /q \"{}\"\n".format(owitem)
+        else:
+            bat_string += "del /q \"{}\"\n".format(owitem)
+
+        if os.path.isdir(initem):
+            dest = os.path.join(owdir, os.path.basename(initem))
+            bat_string += "robocopy \"{}\" \"{}\" /e\n".format(initem, dest)
+        else:
+            bat_string += "copy /y /b \"{}\" \"{}\"\n".format(initem, owdir)
+
+        bat_string += "start \"\" \"{}\"\n".format(abs_path)
+
+        with TemporaryDirectory() as tmpdir:
+            vbs_path = os.path.join(tmpdir, 'invisble.vbs')
+            bat_path = os.path.join(tmpdir, 'restart.bat')
+            with open(vbs_path, 'w', encoding='utf8') as vbs_file:
+                vbs_file.write(vbs_string)
+            with open(bat_path, 'w', encoding='utf8') as bat_file:
+                bat_file.write(bat_string)
+
+            args = ['wscript.exe', vbs_path, bat_path]
+            subprocess.Popen(args)
+            os._exit(0)
+
+    else:  # pragma: no windows
+        if os.path.isdir(owitem):
+            rmtree(owitem)
+        else:
+            os.remove(owitem)
+
+        if os.path.isdir(initem):
+            copytree(initem, os.path.join(owdir, os.path.basename(initem)))
+        else:
+            copy2(initem, owdir)
+
+        filest = os.stat(abs_path)
+        os.chmod(abs_path,
+                 filest.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+        os.execl(abs_path, fname)

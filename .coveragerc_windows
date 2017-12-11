@@ -5,6 +5,9 @@ exclude_lines =
     # Have to re-enable the standard pragma
     pragma: no cover
 
+    # Disable non-windows statements
+    pragma: no windows
+
     # Don't complain about missing debug-only code:
     def __repr__
     if self\.debug
