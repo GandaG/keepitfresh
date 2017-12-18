@@ -15,6 +15,8 @@ Simple as that! You now have *keepitfresh* available in your environment.
 Reference
 ---------
 
+.. autofunction:: keepitfresh.freshen_up
+
 .. autofunction:: keepitfresh.get_file_urls
 
 .. autofunction:: keepitfresh.get_update_version

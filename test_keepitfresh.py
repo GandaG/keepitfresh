@@ -1,8 +1,11 @@
+import http.server
 import os
 import pathlib
+import socketserver
 import stat
 import zipfile
 from platform import system
+from threading import Thread
 
 import keepitfresh
 import mock
@@ -189,3 +192,54 @@ def test_overwrite_restart(mock_exec, tmpdir):
         open_patcher.stop()
         subprocess_patcher.stop()
         exit_patcher.stop()
+
+
+@mock.patch("keepitfresh.overwrite_restart")
+@mock.patch("keepitfresh.extract_archive")
+def test_freshen_up(mock_unpack, mock_restart, tmpdir):
+    test_func = keepitfresh.freshen_up
+
+    tmpdir = str(tmpdir)
+    zip_file = os.path.join(tmpdir, 'example-0.1.3.zip')
+    example_file = os.path.join(tmpdir, 'example.file')
+
+    open(os.path.join(tmpdir, 'example-0.1.0.zip'), 'w').close()
+    open(os.path.join(tmpdir, 'example-0.1.1.zip'), 'w').close()
+    open(os.path.join(tmpdir, 'example-0.1.2.zip'), 'w').close()
+
+    with open(example_file, 'w') as ofile:
+        ofile.write('aaaa')
+
+    with zipfile.ZipFile(zip_file, 'w') as zipf:
+        zipf.write(example_file, os.path.basename(example_file))
+
+    with open(example_file, 'w') as ofile:
+        ofile.write('boop')
+
+    os.chdir(tmpdir)
+    server_list = []
+    port = 8081
+
+    def start_server(s_list):
+        handler = http.server.SimpleHTTPRequestHandler
+        handler.log_message = lambda *a, **b: None
+        socketserver.TCPServer.allow_reuse_address = True
+        server = socketserver.TCPServer(("", port), handler)
+        s_list.append(server)
+        server.serve_forever()
+
+    Thread(target=start_server, args=(server_list,)).start()
+
+    test_url = 'http://127.0.0.1:{}/'.format(port)
+    regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
+
+    arg_pack = {
+        'base_url': test_url,
+        'regex': regex,
+        'current_version': '0.0.0',
+        'overwrite_item': example_file,
+        'entry_point': 'example.file'}
+    test_func(**arg_pack)
+    server_list[0].shutdown()
+    mock_unpack.assert_called_once()
+    mock_restart.assert_called_once()

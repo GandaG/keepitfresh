@@ -193,3 +193,59 @@ def overwrite_restart(initem, owitem, entry_point):
         os.chmod(abs_path,
                  filest.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
         os.execl(abs_path, fname)
+
+
+def freshen_up(**kwargs):
+    """
+    Finds, downloads, unpacks, overwrites and restarts you application.
+    Essentially an all-in-one for your convenience.
+
+    This function requires 5 arguments to be passed with an additional
+    2 optional.
+
+    The required arguments are as follows:
+
+    - **base_url** - The url that contains the links to download the
+      package in the form ``<a href"..."/>``.
+    - **regex** - The regular expression that matches the file name.
+      Must contain at least one capturing group representing the version
+      string and this must be the first group.
+    - **current_version** - The current version of the application as a string.
+    - **overwrite_item** - The file/folder where your application is and that
+      is going to be overwritten.
+    - **entry_point** - The relative path from **overwrite_item** to the
+      executable that restarts the application.
+
+    The optional arguments are as follows:
+
+    - **versioncmp** - A function to override the default version comparison
+      method, that takes 2 positional arguments, two version strings, and
+      returns ``True`` whenever the second version string is newer than the
+      first version string.
+    - **unpack** - A function to override the defauly unpacking method that
+      takes two arguments, the archive path and the output folder.
+
+    If **versioncmp** is not provided, the standard comparison method from the
+    `packaging <https://packaging.pypa.io/en/latest/version/>`_ package is
+    used. If **unpack** is not provided, unpacking is handled by
+    `patool <http://wummel.github.io/patool/>`_.
+    """
+    base_url = kwargs.get('base_url')
+    regex = kwargs.get('regex')
+    current_version = kwargs.get('current_version')
+    overwrite_item = kwargs.get('overwrite_item')
+    entry_point = kwargs.get('entry_point')
+    versioncmp = kwargs.get('versioncmp', None)
+    unpack = kwargs.get('unpack', None)
+
+    file_dict = get_file_urls(base_url, regex)
+    latest_match = get_update_version(file_dict, current_version, versioncmp)
+    if not latest_match:
+        raise RuntimeError("No newer version!")
+    with TemporaryDirectory() as tmpdir:
+        dl_unpack(latest_match[0], tmpdir, unpack)
+        if len(os.listdir(tmpdir)) == 1:
+            initem = os.path.join(tmpdir, os.listdir(tmpdir)[0])
+        else:
+            initem = os.path.join(tmpdir, entry_point)
+        overwrite_restart(initem, overwrite_item, entry_point)
