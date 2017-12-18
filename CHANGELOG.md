@@ -1,5 +1,9 @@
 ## Changelog
 
+#### 1.0.1
+
+* Fixed tests and deployment.
+
 #### 1.0.0
 
 * Added examples to documentation.

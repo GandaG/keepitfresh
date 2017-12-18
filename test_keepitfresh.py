@@ -220,8 +220,8 @@ def test_is_fresh(tmpdir):
     test_url = 'http://127.0.0.1:{}/'.format(port)
     regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
 
-    assert test_func(test_url, regex, '0.1.2')
-    assert not test_func(test_url, regex, '0.1.3')
+    assert not test_func(test_url, regex, '0.1.2')
+    assert test_func(test_url, regex, '0.1.3')
 
     server_list[0].shutdown()
     thread.join()
