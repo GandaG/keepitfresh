@@ -1,5 +1,10 @@
 ## Changelog
 
+#### 1.0.0
+
+* Added examples to documentation.
+* Added `is_fresh` function that returns a boolean on whether the current version is fresh.
+
 #### 0.5.0
 
 * Added `freshen_up` that essentially does everything the others do in a more condensed way so the user does not need to figure out how to call each of them.
