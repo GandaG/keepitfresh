@@ -17,6 +17,8 @@ Reference
 
 .. autofunction:: keepitfresh.freshen_up
 
+.. autofunction:: keepitfresh.is_fresh
+
 .. autofunction:: keepitfresh.get_file_urls
 
 .. autofunction:: keepitfresh.get_update_version

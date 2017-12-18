@@ -194,6 +194,39 @@ def test_overwrite_restart(mock_exec, tmpdir):
         exit_patcher.stop()
 
 
+def test_is_fresh(tmpdir):
+    test_func = keepitfresh.is_fresh
+
+    tmpdir.ensure('example-0.1.0.zip', file=True)
+    tmpdir.ensure('example-0.1.1.zip', file=True)
+    tmpdir.ensure('example-0.1.2.zip', file=True)
+    tmpdir.ensure('example-0.1.3.zip', file=True)
+
+    os.chdir(str(tmpdir))
+    server_list = []
+    port = 8080
+
+    def start_server(s_list):
+        handler = http.server.SimpleHTTPRequestHandler
+        handler.log_message = lambda *a, **b: None
+        socketserver.TCPServer.allow_reuse_address = True
+        server = socketserver.TCPServer(("", port), handler)
+        s_list.append(server)
+        server.serve_forever()
+
+    thread = Thread(target=start_server, args=(server_list,))
+    thread.start()
+
+    test_url = 'http://127.0.0.1:{}/'.format(port)
+    regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
+
+    assert test_func(test_url, regex, '0.1.2')
+    assert not test_func(test_url, regex, '0.1.3')
+
+    server_list[0].shutdown()
+    thread.join()
+
+
 @mock.patch("keepitfresh.overwrite_restart")
 @mock.patch("keepitfresh.extract_archive")
 def test_freshen_up(mock_unpack, mock_restart, tmpdir):
@@ -228,7 +261,8 @@ def test_freshen_up(mock_unpack, mock_restart, tmpdir):
         s_list.append(server)
         server.serve_forever()
 
-    Thread(target=start_server, args=(server_list,)).start()
+    thread = Thread(target=start_server, args=(server_list,))
+    thread.start()
 
     test_url = 'http://127.0.0.1:{}/'.format(port)
     regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
@@ -241,5 +275,6 @@ def test_freshen_up(mock_unpack, mock_restart, tmpdir):
         'entry_point': 'example.file'}
     test_func(**arg_pack)
     server_list[0].shutdown()
+    thread.join()
     mock_unpack.assert_called_once()
     mock_restart.assert_called_once()

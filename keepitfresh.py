@@ -195,9 +195,25 @@ def overwrite_restart(initem, owitem, entry_point):
         os.execl(abs_path, fname)
 
 
+def is_fresh(base_url, regex, current_version, versioncmp=None):
+    """
+    Checks whether your application is fresh (if there is a more
+    recent version).
+    Returns False if there is a newer version, True otherwise.
+
+    For what each argument means, please refer to
+    :func:`~keepitfresh.freshen_up`.
+    """
+    file_dict = get_file_urls(base_url, regex)
+    latest_match = get_update_version(file_dict, current_version, versioncmp)
+    if not latest_match:
+        return True
+    return False
+
+
 def freshen_up(**kwargs):
     """
-    Finds, downloads, unpacks, overwrites and restarts you application.
+    Finds, downloads, unpacks, overwrites and restarts your application.
     Essentially an all-in-one for your convenience.
 
     This function requires 5 arguments to be passed with an additional
