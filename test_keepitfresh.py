@@ -1,7 +1,6 @@
 import http.server
 import os
 import pathlib
-import socketserver
 import stat
 import zipfile
 from platform import system
@@ -11,43 +10,38 @@ import keepitfresh
 import mock
 
 
-@mock.patch("keepitfresh.urlopen")
-def test_get_file_urls(mock_open):
+def test_get_file_urls(tmpdir):
     test_func = keepitfresh.get_file_urls
 
-    mock_webpage = mock_open.return_value.__enter__.return_value
-    mock_webpage.read.return_value = \
-        (b'<!DOCTYPE html><html><head><title>'
-         b'Links for uptodate</title></head><body>'
-         b'<h1>Links for uptodate</h1>'
-         b'<a href="/packages/example-0.1.1.tar.gz"'
-         b'>example-0.1.1.tar.gz</a><br/>'
-         b'<a href="../../packages/'
-         b'example-0.1.0.zip">example-0.1.0.zip</a>'
-         b'<br/><a href="../packages/'
-         b'example-0.1.2.7z">example-0.1.2.7z</a>'
-         b'<br/><a href="packages/example-0.1.3.rar">'
-         b'example-0.1.3.rar</a><br/></body></html>')
-    mock_webpage.headers.get_content_charset.return_value = 'utf8'
+    tmpdir.ensure('example-0.1.0.zip', file=True)
+    tmpdir.ensure('example-0.1.1.tar.gz', file=True)
+    tmpdir.ensure('example-0.1.2.7z', file=True)
+    tmpdir.ensure('example-0.1.3.rar', file=True)
 
-    test_url = "https://pypi.python.org/simple/example/"
+    os.chdir(str(tmpdir))
+    port = 8001
+    handler = http.server.SimpleHTTPRequestHandler
+    handler.log_message = lambda *a, **b: None
+    http.server.HTTPServer.allow_reuse_address = True
+    server = http.server.HTTPServer(("localhost", port), handler)
+
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+
+    test_url = 'http://localhost:{}/'.format(port)
+
     regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
-
     expected = {
-            'https://pypi.python.org/'
-            'packages/example-0.1.1.tar.gz': '0.1.1',
-            'https://pypi.python.org/'
-            'packages/example-0.1.0.zip': '0.1.0',
-            'https://pypi.python.org/'
-            'simple/packages/example-0.1.2.7z': '0.1.2',
-            'https://pypi.python.org/'
-            'simple/example/packages/example-0.1.3.rar': '0.1.3'}
-
+            '{}example-0.1.1.tar.gz'.format(test_url): '0.1.1',
+            '{}example-0.1.0.zip'.format(test_url): '0.1.0',
+            '{}example-0.1.2.7z'.format(test_url): '0.1.2',
+            '{}example-0.1.3.rar'.format(test_url): '0.1.3'}
     assert test_func(test_url, regex) == expected
 
     regex = r'mangledregex'
-
     assert test_func(test_url, regex) == {}
+
+    server.shutdown()
 
 
 def test_get_update_version():
@@ -201,28 +195,22 @@ def test_is_fresh(tmpdir):
     tmpdir.ensure('example-0.1.3.zip', file=True)
 
     os.chdir(str(tmpdir))
-    server_list = []
-    port = 8080
+    port = 8000
+    handler = http.server.SimpleHTTPRequestHandler
+    handler.log_message = lambda *a, **b: None
+    http.server.HTTPServer.allow_reuse_address = True
+    server = http.server.HTTPServer(("localhost", port), handler)
 
-    def start_server(s_list):
-        handler = http.server.SimpleHTTPRequestHandler
-        handler.log_message = lambda *a, **b: None
-        socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", port), handler)
-        s_list.append(server)
-        server.serve_forever()
-
-    thread = Thread(target=start_server, args=(server_list,))
+    thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
-    test_url = 'http://127.0.0.1:{}/'.format(port)
+    test_url = 'http://localhost:{}/'.format(port)
     regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
 
     assert not test_func(test_url, regex, '0.1.2')
     assert test_func(test_url, regex, '0.1.3')
 
-    server_list[0].shutdown()
-    thread.join()
+    server.shutdown()
 
 
 @mock.patch("keepitfresh.overwrite_restart")
@@ -248,21 +236,16 @@ def test_freshen_up(mock_unpack, mock_restart, tmpdir):
         ofile.write('boop')
 
     os.chdir(tmpdir)
-    server_list = []
-    port = 8081
+    port = 8100
+    handler = http.server.SimpleHTTPRequestHandler
+    handler.log_message = lambda *a, **b: None
+    http.server.HTTPServer.allow_reuse_address = True
+    server = http.server.HTTPServer(("localhost", port), handler)
 
-    def start_server(s_list):
-        handler = http.server.SimpleHTTPRequestHandler
-        handler.log_message = lambda *a, **b: None
-        socketserver.TCPServer.allow_reuse_address = True
-        server = socketserver.TCPServer(("", port), handler)
-        s_list.append(server)
-        server.serve_forever()
-
-    thread = Thread(target=start_server, args=(server_list,))
+    thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
-    test_url = 'http://127.0.0.1:{}/'.format(port)
+    test_url = 'http://localhost:{}/'.format(port)
     regex = r'example-(\d+\.\d+\.\d+)\.(?:tar\.gz|zip|rar|7z)'
 
     arg_pack = {
@@ -272,7 +255,6 @@ def test_freshen_up(mock_unpack, mock_restart, tmpdir):
         'overwrite_item': example_file,
         'entry_point': 'example.file'}
     test_func(**arg_pack)
-    server_list[0].shutdown()
-    thread.join()
+    server.shutdown()
     mock_unpack.assert_called_once()
     mock_restart.assert_called_once()
