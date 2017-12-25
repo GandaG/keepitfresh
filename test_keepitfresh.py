@@ -9,7 +9,6 @@ from threading import Thread
 
 import keepitfresh
 import mock
-import pytest
 
 
 @mock.patch("keepitfresh.urlopen")
@@ -48,8 +47,7 @@ def test_get_file_urls(mock_open):
 
     regex = r'mangledregex'
 
-    with pytest.raises(ValueError):
-        test_func(test_url, regex)
+    assert test_func(test_url, regex) == {}
 
 
 def test_get_update_version():

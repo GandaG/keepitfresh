@@ -59,8 +59,6 @@ def get_file_urls(base_url, regex):
 
     pattern = r'<\s*a\s+[^>]*href\s*=\s*[\"\'](.*?' + regex + r')[\"\']'
     results = findall(pattern, content)
-    if not results:
-        raise ValueError("No files found in given url with given regex.")
 
     file_dict = {}
     for match in results:
