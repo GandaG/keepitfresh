@@ -1,5 +1,9 @@
 ## Changelog
 
+#### 1.0.2
+
+* Removed unnecessary thrown exception in `get_file_urls`.
+
 #### 1.0.1
 
 * Fixed tests and deployment.
