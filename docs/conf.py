@@ -22,9 +22,6 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 import os
-import setuptools
-
-config = setuptools.config.read_configuration('../setup.cfg')
 
 # -- General configuration ------------------------------------------------
 
@@ -64,7 +61,7 @@ author = 'Daniel Nunes'
 # built documents.
 #
 # The short X.Y version.
-version = config['metadata']['version']
+version = '1.0.1'
 # The full version, including alpha/beta/rc tags.
 release = version
 
